@@ -16,6 +16,40 @@ app.use(bodyParser.json());
 // Para cada serviçço sera criado um ServiceProxy em uma porta
 const clienteServiceProxy = httpProxy('http://localhost:8080');
 
+const authServiceProxy = httpProxy('http://localhost:5001',{
+    proxyReqBodyDecorator: function(bodyContent, srcReq){
+        try{
+            retBody={};
+            retBody.login = bodyContent.user;
+            retBody.senha = bodyContent.password;
+            bodyContent = retBody;
+        }
+        catch(e){
+            console.log('- ERRO: '+ e);
+        }
+        return bodyContent;
+    },
+    proxyReqOptDecorator: function(proxyReqOpts, srcReq){
+        proxyReqOpts.headers['Content-Type'] = 'application/json';
+        proxyReqOpts.method = 'POST';
+        return proxyReqOpts;
+    },
+    userResDecorator: function(proxyRes, proxyResData, userReq, userRes){
+        if(proxyRes.statusCode == 200){
+            var str = Buffer.from(proxyResData).toString('utf-8');
+            var objBody = JSON.parse(str);
+            const id = objBody.id;
+            const token = jwt.sign({id}, process.env.SECRET, {expiresIn: 300});
+            userRes.status(200);
+            return {auth: true, token: token, data: objBody};
+        }
+        else{
+            userRes.status(401);
+            return {message: 'LOGIN INVÁLIDO'};
+        }
+    }
+});
+
 function veryfyJWT(req, res, next){
     const token = req.headers["x-access-token"];
     if(!token)
@@ -32,13 +66,17 @@ function veryfyJWT(req, res, next){
         });
 }
 // depois vai ser direcionado para serviço de autenticação
-app.post('/login', (req, res) => {
+app.post('/login', (req, res, next) => {
+    authServiceProxy(req, res, next);
+
+    /*
     if(req.body.user === 'leo' && req.body.password === 'leo'){
         const id = 1;
         const token = jwt.sign({id}, process.env.SECRET, {expiresIn: 1200});
         return res.json({auth: true, token: token});
     }
     res.status(500).json({message:'Login Inválido'});
+    */
 })
 
 app.post('/logout', function(req, res) {

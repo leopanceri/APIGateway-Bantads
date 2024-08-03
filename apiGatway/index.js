@@ -16,6 +16,10 @@ app.use(bodyParser.json());
 // Para cada serviçço sera criado um ServiceProxy em uma porta
 const clienteServiceProxy = httpProxy('http://localhost:8080');
 
+// Serviço de conta na porta 8081
+const contaServiceProxy = httpProxy('http://localhost:8081'); 
+
+
 const authServiceProxy = httpProxy('http://localhost:5001',{
     proxyReqBodyDecorator: function(bodyContent, srcReq){
         try{
@@ -189,6 +193,21 @@ app.get('/administradores/gerentes', veryfyJWT, (req, res, next) => {
 app.put('/administradores/gerentes/:id', veryfyJWT, (req, res, next) => {
     adminServiceProxy(req, res, next);
 });
+
+// busca de clientes por ID do gerente
+app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) => {
+    const gerenteId = req.params.gerenteId;
+
+    // Obter IDs dos clientes no serviço de conta
+    req.url = `/conta/clientes-por-gerente/${gerenteId}`;
+    const clienteIdsResponse = await contaServiceProxy(req, res, next);
+    const clienteIds = JSON.parse(clienteIdsResponse).data;
+
+    // Obter dados dos clientes no serviço de cliente
+    req.url = `/clientes/ids?ids=${clienteIds.join(',')}`;
+    clienteServiceProxy(req, res, next);
+});
+
 
 //Configurações da aplicação
 

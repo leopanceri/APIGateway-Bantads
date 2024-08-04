@@ -72,17 +72,23 @@ app.get("/clientes", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
-// busca cliente por id = não funcionou!
+// busca cliente por id = OKAY(leo)
+app.get("/clientes/:id", veryfyJWT, (req, res, next) => {
+  clienteServiceProxy(req, res, next);
+});
+
 // OKAY
 app.get("/clientes/:cpf", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
+/*
 // insere novo cliente (autocadastro)
 // NAO EXISTE NE
 app.post("/clientes", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
+*/
 
 // unificou deposito saque transfrencia
 //OKAY
@@ -104,46 +110,46 @@ app.get("/gerentes/inicio", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
-// aprovação
-app.post("/gerentes/clientes/aprovar/:id", veryfyJWT, (req, res, next) => {
-  gerenteServiceProxy(req, res, next);
+// aprovação OK (leo)
+app.put("/gerentes/clientes/aprovar/:id", veryfyJWT, (req, res, next) => {
+  clienteServiceProxy(req, res, next);
 });
 
-// rejeição
-app.post("/gerentes/clientes/rejeitar/:id", veryfyJWT, (req, res, next) => {
-  gerenteServiceProxy(req, res, next);
+// rejeição - Meio OK, não passa o texto com motivo (leo)
+app.put("/gerentes/clientes/rejeitar/:id", veryfyJWT, (req, res, next) => {
+  clienteServiceProxy(req, res, next);
 });
 
-// listagem de clientes
+// listagem de clientes (fazer composition)
 app.get("/gerentes/clientes", veryfyJWT, (req, res, next) => {
   gerenteServiceProxy(req, res, next);
 });
 
-// listagem por cpf
+// listagem por cpf => ok  (leo)
 app.get("/gerentes/clientes/:cpf", veryfyJWT, (req, res, next) => {
-  gerenteServiceProxy(req, res, next);
+  clienteServiceProxy(req, res, next);
 });
 
-// listagem do top 3
+// listagem do top 3 (fazer composition)
 app.get("/gerentes/clientes/top3", veryfyJWT, (req, res, next) => {
   gerenteServiceProxy(req, res, next);
 });
 
 // Rotas de Administradores
 
-// início
+// início (fazer composition)
 app.get("/administradores/inicio", veryfyJWT, (req, res, next) => {
   adminServiceProxy(req, res, next);
 });
 
-// clientes
+// clientes (fazer composition)
 app.get("/administradores/clientes", veryfyJWT, (req, res, next) => {
   adminServiceProxy(req, res, next);
 });
 
-// atualização de gerentes
+//cadastro novo de gerentes
 // OKAY
-app.post("/administradores/gerentes", veryfyJWT, (req, res, next) => {
+app.post("/administradores/gerentes/novo", veryfyJWT, (req, res, next) => {
   sagaServiceProxy(req, res, next);
 });
 
@@ -154,12 +160,12 @@ app.delete("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
 });
 
 // listagem de gerentes
-// OKAY (nao sei tem que ver se funciona)
-app.get("/gerentes", veryfyJWT, (req, res, next) => {
+// OKAY okay(leo)
+app.get("/administradores/gerentes", veryfyJWT, (req, res, next) => {
   gerenteServiceProxy(req, res, next);
 });
 
-// criação de gerentes por id
+// atualização de gerentes por id
 // OKAY
 app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
   sagaServiceProxy(req, res, next);

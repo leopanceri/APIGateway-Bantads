@@ -17,7 +17,7 @@ app.use(cors());
 
 // Serviço cliente rodando na porta 8080 localmente
 // Para cada serviçço sera criado um ServiceProxy em uma porta
-const clienteServiceProxy = httpProxy("http://localhost:8090");
+const clienteServiceProxy = httpProxy('http://localhost:8080');
 
 const gerenteServiceProxy = httpProxy("http://localhost:8100");
 
@@ -175,6 +175,21 @@ app.get("/administradores/gerentes", veryfyJWT, (req, res, next) => {
 app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
   sagaServiceProxy(req, res, next);
 });
+
+// busca de clientes por ID do gerente
+app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) => {
+    const gerenteId = req.params.gerenteId;
+
+    // Obter IDs dos clientes no serviço de conta
+    req.url = `/conta/clientes-por-gerente/${gerenteId}`;
+    const clienteIdsResponse = await contaServiceProxy(req, res, next);
+    const clienteIds = JSON.parse(clienteIdsResponse).data;
+
+    // Obter dados dos clientes no serviço de cliente
+    req.url = `/clientes/ids?ids=${clienteIds.join(',')}`;
+    clienteServiceProxy(req, res, next);
+});
+
 
 //Configurações da aplicação
 

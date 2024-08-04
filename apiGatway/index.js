@@ -16,7 +16,13 @@ app.use(bodyParser.json());
 // Para cada serviçço sera criado um ServiceProxy em uma porta
 const clienteServiceProxy = httpProxy("http://localhost:8090");
 
+const gerenteServiceProxy = httpProxy("http://localhost:8100");
+
 const authServiceProxy = httpProxy("http://localhost:5001");
+
+const contaServiceProxy = httpProxy("http://localhost:5002");
+
+const sagaServiceProxy = httpProxy("http://localhost:5005");
 
 function veryfyJWT(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -42,56 +48,60 @@ function veryfyJWT(req, res, next) {
   });
 }
 // depois vai ser direcionado para serviço de autenticação
+// OKAY
 app.post("/autenticar", (req, res, next) => {
   authServiceProxy(req, res, next);
 });
 
+// OKAY
 app.post("/registrar", (req, res, next) => {
-  authServiceProxy(req, res, next);
+  req.url = "/autocadastro";
+  sagaServiceProxy(req, res, next);
 });
 
 // Rotas de Clientes
 
+// OKAY
+app.put("/clientes/perfil", veryfyJWT, (req, res, next) => {
+  sagaServiceProxy(req, res, next);
+});
+
 // lista todos os clientes
+// OKAY
 app.get("/clientes", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
 // busca cliente por id = não funcionou!
+// OKAY
 app.get("/clientes/:cpf", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
 // insere novo cliente (autocadastro)
+// NAO EXISTE NE
 app.post("/clientes", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
-// depósito
-app.post("/clientes/deposito", veryfyJWT, (req, res, next) => {
-  clienteServiceProxy(req, res, next);
-});
-
-// saque
-app.post("/clientes/saque", veryfyJWT, (req, res, next) => {
-  clienteServiceProxy(req, res, next);
-});
-
-// transferência
-app.post("/clientes/transferencia", veryfyJWT, (req, res, next) => {
-  clienteServiceProxy(req, res, next);
+// unificou deposito saque transfrencia
+//OKAY
+app.post("/transacoes", veryfyJWT, (req, res, next) => {
+  contaServiceProxy(req, res, next);
 });
 
 // extrato
-app.get("/clientes/extrato", veryfyJWT, (req, res, next) => {
-  clienteServiceProxy(req, res, next);
+// OKAY MAIS OU MENOS (funcionamento)
+app.get("/transacoes", veryfyJWT, (req, res, next) => {
+  contaServiceProxy(req, res, next);
 });
 
 // Rotas de Gerentes
 
 // início
+// OKAY
 app.get("/gerentes/inicio", veryfyJWT, (req, res, next) => {
-  gerenteServiceProxy(req, res, next);
+  clienteServiceProxy(req, res, next);
 });
 
 // aprovação
@@ -132,23 +142,27 @@ app.get("/administradores/clientes", veryfyJWT, (req, res, next) => {
 });
 
 // atualização de gerentes
+// OKAY
 app.post("/administradores/gerentes", veryfyJWT, (req, res, next) => {
-  adminServiceProxy(req, res, next);
+  sagaServiceProxy(req, res, next);
 });
 
 // gerente por id
+// OKAY
 app.delete("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
-  adminServiceProxy(req, res, next);
+  sagaServiceProxy(req, res, next);
 });
 
 // listagem de gerentes
-app.get("/administradores/gerentes", veryfyJWT, (req, res, next) => {
-  adminServiceProxy(req, res, next);
+// OKAY (nao sei tem que ver se funciona)
+app.get("/gerentes", veryfyJWT, (req, res, next) => {
+  gerenteServiceProxy(req, res, next);
 });
 
 // criação de gerentes por id
+// OKAY
 app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
-  adminServiceProxy(req, res, next);
+  sagaServiceProxy(req, res, next);
 });
 
 //Configurações da aplicação

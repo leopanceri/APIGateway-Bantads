@@ -1,13 +1,14 @@
 require("dotenv-safe").config();
 const jwt = require("jsonwebtoken");
-var http = require("http");
+const http = require("http");
 const express = require("express");
 const httpProxy = require("express-http-proxy");
+const axios = require("axios");
 const app = express();
-var cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
-var bodyParser = require("body-parser");
-var logger = require("morgan");
+const bodyParser = require("body-parser");
+const logger = require("morgan");
 const helmet = require("helmet");
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -176,17 +177,41 @@ app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
 
 // busca de clientes por ID do gerente
 app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) => {
-    const gerenteId = req.params.gerenteId;
+  const gerenteId = req.params.gerenteId;
 
+  try {
     // Obter IDs dos clientes no serviço de conta
-    req.url = `/conta/clientes-por-gerente/${gerenteId}`;
-    const clienteIdsResponse = await contaServiceProxy(req, res, next);
-    const clienteIds = JSON.parse(clienteIdsResponse).data;
+    const clienteIdsResponse = await axios.get(`http://localhost:5002/conta/clientes-por-gerente/${gerenteId}`);
+    const clienteIds = clienteIdsResponse.data.data;
 
     // Obter dados dos clientes no serviço de cliente
-    req.url = `/clientes/ids?ids=${clienteIds.join(',')}`;
-    clienteServiceProxy(req, res, next);
+    const clientesResponse = await axios.get(`http://localhost:8080/clientes/ids?ids=${clienteIds.join(',')}`);
+    const clientes = clientesResponse.data;
+
+    // Filtrar apenas CPF, Nome, Endereço
+    const clientesFiltrados = clientes.map(cliente => ({
+      cpf: cliente.cpf,
+      nome: cliente.nome,
+      endereco: cliente.endereco
+    }));
+
+    // Obter dados de saldo
+    const contasResponse = await axios.get(`http://localhost:5002/list`);
+    const contas = contasResponse.data;
+
+    // Filtrar apenas os saldos
+    const saldos = contas.map(conta => conta.saldo);
+
+    // Responder com os dados filtrados
+    res.json({
+      clientes: clientesFiltrados,
+      saldos: saldos
+    });
+  } catch (error) {
+    next(error);
+  }
 });
+
 
 
 //Configurações da aplicação

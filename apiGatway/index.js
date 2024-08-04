@@ -18,7 +18,7 @@ app.use(cors());
 
 // Serviço cliente rodando na porta 8080 localmente
 // Para cada serviçço sera criado um ServiceProxy em uma porta
-const clienteServiceProxy = httpProxy('http://localhost:8080');
+const clienteServiceProxy = httpProxy("http://localhost:8080");
 
 const gerenteServiceProxy = httpProxy("http://localhost:8100");
 
@@ -30,7 +30,7 @@ const sagaServiceProxy = httpProxy("http://localhost:5005");
 
 function veryfyJWT(req, res, next) {
   const authHeader = req.headers["authorization"];
-
+  console.log(req.headers, authHeader);
   if (!authHeader)
     return res
       .status(401)
@@ -39,6 +39,7 @@ function veryfyJWT(req, res, next) {
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7, authHeader.length)
     : authHeader;
+  console.log(token);
 
   jwt.verify(token, process.env.SECRET, function (err, decoded) {
     if (err) {
@@ -153,7 +154,7 @@ app.get("/administradores/clientes", veryfyJWT, (req, res, next) => {
 
 //cadastro novo de gerentes
 // OKAY
-app.post("/administradores/gerentes/novo", veryfyJWT, (req, res, next) => {
+app.post("/administradores/gerentes", veryfyJWT, (req, res, next) => {
   sagaServiceProxy(req, res, next);
 });
 
@@ -166,6 +167,7 @@ app.delete("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
 // listagem de gerentes
 // OKAY okay(leo)
 app.get("/administradores/gerentes", veryfyJWT, (req, res, next) => {
+  req.url = "/administradores/gerentes";
   gerenteServiceProxy(req, res, next);
 });
 
@@ -176,6 +178,7 @@ app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
 });
 
 // busca de clientes por ID do gerente
+
 app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) => {
   const gerenteId = req.params.gerenteId;
 
@@ -211,7 +214,6 @@ app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) =>
       next(error);
   }
 });
-
 
 
 //Configurações da aplicação

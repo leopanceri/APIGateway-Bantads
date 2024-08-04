@@ -188,29 +188,34 @@ app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) =>
       const clientesResponse = await axios.get(`http://localhost:8080/clientes/ids?ids=${clienteIds.join(',')}`);
       const clientes = clientesResponse.data;
 
+      // Obter dados de saldo
+      const contasResponse = await axios.get(`http://localhost:5002/list`);
+      const contas = contasResponse.data;
+
       // Filtrar apenas CPF, Nome, Endereço
       const clientesFiltrados = clientes.map(cliente => ({
+          id: cliente.id,
           cpf: cliente.cpf,
           nome: cliente.nome,
           endereco: cliente.endereco
       }));
 
-      // Obter dados de saldo
-      const contasResponse = await axios.get(`http://localhost:5002/list`);
-      const contas = contasResponse.data;
-
-      // Filtrar apenas os saldos
-      const saldos = contas.map(conta => conta.saldo);
-
-      // Responder com os dados filtrados
-      res.json({
-          clientes: clientesFiltrados,
-          saldos: saldos
+      // Combinar clientes com saldos
+      const clientesComSaldo = clientesFiltrados.map(cliente => {
+          const conta = contas.find(conta => conta.clienteId === cliente.id);
+          return {
+              ...cliente,
+              saldo: conta ? conta.saldo : null
+          };
       });
+
+      // Responder com os dados combinados
+      res.json(clientesComSaldo);
   } catch (error) {
       next(error);
   }
 });
+
 
 
 

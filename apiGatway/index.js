@@ -29,7 +29,7 @@ const sagaServiceProxy = httpProxy("http://localhost:5005");
 
 function veryfyJWT(req, res, next) {
   const authHeader = req.headers["authorization"];
-
+  console.log(req.headers, authHeader);
   if (!authHeader)
     return res
       .status(401)
@@ -38,6 +38,7 @@ function veryfyJWT(req, res, next) {
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7, authHeader.length)
     : authHeader;
+  console.log(token);
 
   jwt.verify(token, process.env.SECRET, function (err, decoded) {
     if (err) {
@@ -165,6 +166,7 @@ app.delete("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
 // listagem de gerentes
 // OKAY okay(leo)
 app.get("/administradores/gerentes", veryfyJWT, (req, res, next) => {
+  req.url = "/administradores/gerentes";
   gerenteServiceProxy(req, res, next);
 });
 

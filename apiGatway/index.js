@@ -5,12 +5,15 @@ const express = require("express");
 const httpProxy = require("express-http-proxy");
 const app = express();
 var cookieParser = require("cookie-parser");
+const cors = require("cors");
 var bodyParser = require("body-parser");
 var logger = require("morgan");
 const helmet = require("helmet");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+app.use(cors());
 
 // Serviço cliente rodando na porta 8080 localmente
 // Para cada serviçço sera criado um ServiceProxy em uma porta
@@ -119,7 +122,7 @@ app.get("/gerentes/clientes", veryfyJWT, (req, res, next) => {
   gerenteServiceProxy(req, res, next);
 });
 
-// listagem por cpf
+// listagem por c
 app.get("/gerentes/clientes/:cpf", veryfyJWT, (req, res, next) => {
   gerenteServiceProxy(req, res, next);
 });

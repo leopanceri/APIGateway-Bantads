@@ -135,9 +135,45 @@ app.get("/gerentes/clientes/:cpf", veryfyJWT, (req, res, next) => {
 });
 
 // listagem do top 3 (fazer composition)
-app.get("/gerentes/clientes/top3", veryfyJWT, (req, res, next) => {
-  gerenteServiceProxy(req, res, next);
+app.get('/gerentes/clientes/top3', veryfyJWT, async (req, res, next) => {
+  const gerenteId = req.query.gerenteId; // Assuming gerenteId is provided as a query parameter
+
+  try {
+      // Obter IDs dos melhores clientes no serviço de conta
+      const melhoresResponse = await axios.get(`http://localhost:5002/melhores/${gerenteId}`);
+      const melhoresContas = melhoresResponse.data;
+
+      // Extrair IDs dos clientes
+      const clienteIds = melhoresContas.map(conta => conta.clienteId);
+
+      // Obter dados dos clientes no serviço de cliente
+      const clientesResponse = await axios.get(`http://localhost:8080/clientes/ids?ids=${clienteIds.join(',')}`);
+      const clientes = clientesResponse.data;
+
+      // Filtrar apenas CPF, Nome, Endereço
+      const clientesFiltrados = clientes.map(cliente => ({
+          id: cliente.id,
+          cpf: cliente.cpf,
+          nome: cliente.nome,
+          endereco: cliente.endereco
+      }));
+
+      // Combinar clientes com saldos
+      const clientesComSaldo = clientesFiltrados.map(cliente => {
+          const conta = melhoresContas.find(conta => conta.clienteId === cliente.id);
+          return {
+              ...cliente,
+              saldo: conta ? conta.saldo : null
+          };
+      });
+
+      // Responder com os dados combinados
+      res.json({ top3: clientesComSaldo });
+  } catch (error) {
+      next(error);
+  }
 });
+
 
 // Rotas de Administradores
 

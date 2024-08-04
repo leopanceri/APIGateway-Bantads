@@ -180,35 +180,35 @@ app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) =>
   const gerenteId = req.params.gerenteId;
 
   try {
-    // Obter IDs dos clientes no serviço de conta
-    const clienteIdsResponse = await axios.get(`http://localhost:5002/conta/clientes-por-gerente/${gerenteId}`);
-    const clienteIds = clienteIdsResponse.data.data;
+      // Obter IDs dos clientes no serviço de conta
+      const clienteIdsResponse = await axios.get(`http://localhost:5002/conta/clientes-por-gerente/${gerenteId}`);
+      const clienteIds = clienteIdsResponse.data.data;
 
-    // Obter dados dos clientes no serviço de cliente
-    const clientesResponse = await axios.get(`http://localhost:8080/clientes/ids?ids=${clienteIds.join(',')}`);
-    const clientes = clientesResponse.data;
+      // Obter dados dos clientes no serviço de cliente
+      const clientesResponse = await axios.get(`http://localhost:8080/clientes/ids?ids=${clienteIds.join(',')}`);
+      const clientes = clientesResponse.data;
 
-    // Filtrar apenas CPF, Nome, Endereço
-    const clientesFiltrados = clientes.map(cliente => ({
-      cpf: cliente.cpf,
-      nome: cliente.nome,
-      endereco: cliente.endereco
-    }));
+      // Filtrar apenas CPF, Nome, Endereço
+      const clientesFiltrados = clientes.map(cliente => ({
+          cpf: cliente.cpf,
+          nome: cliente.nome,
+          endereco: cliente.endereco
+      }));
 
-    // Obter dados de saldo
-    const contasResponse = await axios.get(`http://localhost:5002/list`);
-    const contas = contasResponse.data;
+      // Obter dados de saldo
+      const contasResponse = await axios.get(`http://localhost:5002/list`);
+      const contas = contasResponse.data;
 
-    // Filtrar apenas os saldos
-    const saldos = contas.map(conta => conta.saldo);
+      // Filtrar apenas os saldos
+      const saldos = contas.map(conta => conta.saldo);
 
-    // Responder com os dados filtrados
-    res.json({
-      clientes: clientesFiltrados,
-      saldos: saldos
-    });
+      // Responder com os dados filtrados
+      res.json({
+          clientes: clientesFiltrados,
+          saldos: saldos
+      });
   } catch (error) {
-    next(error);
+      next(error);
   }
 });
 

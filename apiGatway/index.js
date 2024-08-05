@@ -222,7 +222,7 @@ app.get(
       });
 
       // Responder com os dados combinados
-      res.json(clientesComSaldo);
+      res.json({ clientes: clientesComSaldo });
     } catch (error) {
       next(error);
     }

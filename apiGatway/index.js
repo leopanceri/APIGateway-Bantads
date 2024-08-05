@@ -179,7 +179,7 @@ app.get("/administradores/clientes", veryfyJWT, async (req, res, next) => {
     });
 
     // Retornar o relatório
-    res.json(relatorio);
+    res.json({ relatorio: relatorio });
 } catch (error) {
     next(error);
 }

@@ -152,7 +152,7 @@ app.get("/administradores/clientes", veryfyJWT, (req, res, next) => {
 
 //cadastro novo de gerentes
 // OKAY
-app.post("/administradores/gerentes", veryfyJWT, (req, res, next) => {
+app.post("/administradores/gerentes/novo", veryfyJWT, (req, res, next) => {
   sagaServiceProxy(req, res, next);
 });
 

@@ -148,9 +148,43 @@ app.get("/administradores/inicio", veryfyJWT, (req, res, next) => {
 });
 
 // clientes (fazer composition)
-app.get("/administradores/clientes", veryfyJWT, (req, res, next) => {
-  adminServiceProxy(req, res, next);
+app.get("/administradores/clientes", veryfyJWT, async (req, res, next) => {
+  try {
+    // Obter todos os clientes
+    const clientesResponse = await axios.get('http://localhost:8080/clientes');
+    const clientes = clientesResponse.data;
+
+    // Obter todos os gerentes
+    const gerentesResponse = await axios.get('http://localhost:8100/gerentes');
+    const gerentes = gerentesResponse.data;
+    const gerentesMap = new Map(gerentes.map(gerente => [gerente.id, gerente.nome]));
+
+    // Obter todas as contas
+    const contasResponse = await axios.get('http://localhost:5002/list');
+    const contas = contasResponse.data;
+    const contasMap = new Map(contas.map(conta => [conta.idUsuario, conta]));
+
+    // Montar o relatório
+    const relatorio = clientes.map(cliente => {
+        const conta = contasMap.get(cliente.id);
+        const gerenteNome = gerentesMap.get(conta ? conta.idGerente : null) || 'Desconhecido';
+
+        return {
+            nome: cliente.nome,
+            cpf: cliente.cpf,
+            limite: conta ? conta.limite : 'N/A',
+            nomeGerente: gerenteNome,
+            saldo: conta ? conta.saldo : 'N/A'
+        };
+    });
+
+    // Retornar o relatório
+    res.json(relatorio);
+} catch (error) {
+    next(error);
+}
 });
+
 
 //cadastro novo de gerentes
 // OKAY

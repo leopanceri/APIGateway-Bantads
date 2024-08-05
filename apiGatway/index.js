@@ -30,7 +30,6 @@ const sagaServiceProxy = httpProxy("http://localhost:5005");
 
 function veryfyJWT(req, res, next) {
   const authHeader = req.headers["authorization"];
-  console.log(req.headers, authHeader);
   if (!authHeader)
     return res
       .status(401)
@@ -39,7 +38,6 @@ function veryfyJWT(req, res, next) {
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7, authHeader.length)
     : authHeader;
-  console.log(token);
 
   jwt.verify(token, process.env.SECRET, function (err, decoded) {
     if (err) {
@@ -171,6 +169,10 @@ app.get("/administradores/gerentes", veryfyJWT, (req, res, next) => {
   gerenteServiceProxy(req, res, next);
 });
 
+app.get("/conta/saldo/:id", veryfyJWT, (req, res, next) => {
+  contaServiceProxy(req, res, next);
+});
+
 // atualização de gerentes por id
 // OKAY
 app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
@@ -179,16 +181,23 @@ app.put("/administradores/gerentes/:id", veryfyJWT, (req, res, next) => {
 
 // busca de clientes por ID do gerente
 
-app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) => {
-  const gerenteId = req.params.gerenteId;
+app.get(
+  "/clientes-por-gerente/:gerenteId",
+  veryfyJWT,
+  async (req, res, next) => {
+    const gerenteId = req.params.gerenteId;
 
-  try {
+    try {
       // Obter IDs dos clientes no serviço de conta
-      const clienteIdsResponse = await axios.get(`http://localhost:5002/conta/clientes-por-gerente/${gerenteId}`);
+      const clienteIdsResponse = await axios.get(
+        `http://localhost:5002/conta/clientes-por-gerente/${gerenteId}`
+      );
       const clienteIds = clienteIdsResponse.data.data;
 
       // Obter dados dos clientes no serviço de cliente
-      const clientesResponse = await axios.get(`http://localhost:8080/clientes/ids?ids=${clienteIds.join(',')}`);
+      const clientesResponse = await axios.get(
+        `http://localhost:8080/clientes/ids?ids=${clienteIds.join(",")}`
+      );
       const clientes = clientesResponse.data;
 
       // Obter dados de saldo
@@ -196,31 +205,29 @@ app.get('/clientes-por-gerente/:gerenteId', veryfyJWT, async (req, res, next) =>
       const contas = contasResponse.data;
 
       // Filtrar apenas CPF, Nome, Endereço
-      const clientesFiltrados = clientes.map(cliente => ({
-          id: cliente.id,
-          cpf: cliente.cpf,
-          nome: cliente.nome,
-          endereco: cliente.endereco
+      const clientesFiltrados = clientes.map((cliente) => ({
+        id: cliente.id,
+        cpf: cliente.cpf,
+        nome: cliente.nome,
+        endereco: cliente.endereco,
       }));
 
       // Combinar clientes com saldos
-      const clientesComSaldo = clientesFiltrados.map(cliente => {
-          const conta = contas.find(conta => conta.clienteId === cliente.id);
-          return {
-              ...cliente,
-              saldo: conta ? conta.saldo : null
-          };
+      const clientesComSaldo = clientesFiltrados.map((cliente) => {
+        const conta = contas.find((conta) => conta.clienteId === cliente.id);
+        return {
+          ...cliente,
+          saldo: conta ? conta.saldo : null,
+        };
       });
 
       // Responder com os dados combinados
       res.json(clientesComSaldo);
-  } catch (error) {
+    } catch (error) {
       next(error);
+    }
   }
-});
-
-
-
+);
 
 //Configurações da aplicação
 

@@ -113,6 +113,10 @@ app.get("/gerentes/inicio", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);
 });
 
+app.get("/clientename/:id", veryfyJWT, (req, res, next) => {
+  clienteServiceProxy(req, res, next);
+});
+
 // aprovação OK (leo)
 app.put("/gerentes/clientes/aprovar/:id", veryfyJWT, (req, res, next) => {
   clienteServiceProxy(req, res, next);

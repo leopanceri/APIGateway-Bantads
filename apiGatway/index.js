@@ -143,9 +143,68 @@ app.get("/gerentes/clientes/top3", veryfyJWT, (req, res, next) => {
 // Rotas de Administradores
 
 // início (fazer composition)
-app.get("/administradores/inicio", veryfyJWT, (req, res, next) => {
-  adminServiceProxy(req, res, next);
+app.get("/administradores/inicio", veryfyJWT, async (req, res, next) => {
+  try {
+      // Obter lista de gerentes
+      const gerentesResponse = await axios.get('http://localhost:8100/gerentes'); // Assumindo que há um endpoint para listar todos os gerentes
+      const gerentes = gerentesResponse.data; // Lista de todos os gerentes
+      
+      // Obter todos os dados de contas
+      const contasResponse = await axios.get('http://localhost:5002/list');
+      const contas = contasResponse.data; // Lista de todas as contas
+      
+      // Mapear os dados das contas por gerente
+      const gerentesMap = new Map();
+      const clienteCountMap = new Map();
+      const saldoPositivo = {};
+      const saldoNegativo = {};
+
+      contas.forEach(conta => {
+          const { idGerente, idUsuario, saldo } = conta;
+
+          if (!gerentesMap.has(idGerente)) {
+              gerentesMap.set(idGerente, { nome: '', quantidadeClientes: 0, saldoPositivo: 0, saldoNegativo: 0 });
+              clienteCountMap.set(idGerente, new Set()); // Usar um Set para contar clientes únicos
+          }
+
+          // Atualizar saldo positivo e negativo
+          if (saldo >= 0) {
+              gerentesMap.get(idGerente).saldoPositivo += saldo;
+          } else {
+              gerentesMap.get(idGerente).saldoNegativo += saldo;
+          }
+
+          // Contar clientes por gerente
+          clienteCountMap.get(idGerente).add(idUsuario); // Adiciona o cliente ao Set
+          
+          // Atualizar clienteCountMap
+          gerentesMap.get(idGerente).quantidadeClientes = clienteCountMap.get(idGerente).size;
+      });
+
+      // Obter nomes dos gerentes
+      const promises = Array.from(gerentesMap.keys()).map(async (idGerente) => {
+          const gerenteResponse = await axios.get(`http://localhost:8100/gerentes/${idGerente}`);
+          const gerente = gerenteResponse.data;
+          gerentesMap.get(idGerente).nome = gerente.nome; // Atualiza o nome do gerente
+      });
+
+      await Promise.all(promises);
+
+      // Formatar a resposta final
+      const resposta = Array.from(gerentesMap.entries()).map(([idGerente, dados]) => ({
+          idGerente,
+          nome: dados.nome,
+          quantidadeClientes: dados.quantidadeClientes,
+          saldoPositivo: dados.saldoPositivo,
+          saldoNegativo: dados.saldoNegativo
+      }));
+
+      res.json({ telaInicio: resposta });
+  } catch (error) {
+      next(error);
+  }
 });
+
 
 // clientes (fazer composition)
 app.get("/administradores/clientes", veryfyJWT, (req, res, next) => {
